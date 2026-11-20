@@ -90,7 +90,7 @@ function bindControls() {
   $('importFile').addEventListener('change', importProgress);
   $('resetBtn').addEventListener('click', () => {
     if (!confirm('Reset all Leonida Ledger progress?')) return;
-    state.earned = new Set(); state.counters = {}; saveState(); renderAll();
+    state.earned = new Set(); state.counters = {}; state.notes = {}; saveState(); renderAll();
   });
   document.querySelectorAll('.tab').forEach((tab) => {
     tab.addEventListener('click', () => {
@@ -312,7 +312,7 @@ function renderStatistics() {
   const rows = [
     ['Trophies earned', `${earned} / ${total}`, `${Math.round(100 * earned / total)}% of the platinum`],
     ['By grade', GRADE_ORDER.map((g) => `${doc.trophies.filter((t) => t.grade === g && state.earned.has(t.name)).length}/${doc.trophies.filter((t) => t.grade === g).length} ${GRADE_LABEL[g]}`).join(' · '), '1 platinum, 2 gold, 6 silver, 46 bronze in the official list'],
-    ['Counted progress', `${countedDone.toLocaleString()} / ${countedTotal.toLocaleString()}`, 'Across the 18 non-money trophies with a PSN-tracked target (dollars counted separately)'],
+    ['Counted progress', `${countedDone.toLocaleString()} / ${countedTotal.toLocaleString()}`, 'Across the 17 non-money trophies with a PSN-tracked target (dollars counted separately)'],
     ['Hidden trophies', `${hiddenGot} / ${hidden.length} earned`, '28 of the 55 are hidden on PlayStation until earned'],
     ['Missable watch', `${doc.trophies.filter((t) => t.missableRisk !== 'none' && state.earned.has(t.name)).length} / ${doc.trophies.filter((t) => t.missableRisk !== 'none').length} cleared`, '10 watch + 4 unconfirmed — clear them before the finale'],
     ['Guide depth', `${stepsDoc ? Object.values(stepsDoc.steps).flat().length : 0} cited steps`, 'Every step cites Exophase, PSNProfiles, the official description, or this guide’s own reading — 14 steps flagged as estimates'],
