@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leonida Ledger — GTA VI Trophy Guide &amp; Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="title-block">
+    <div class="seal" aria-hidden="true">LL</div>
+    <div>
+      <h1>Leonida Ledger</h1>
+      <p class="subtitle">An offline guide &amp; tracker for all 55 Grand Theft Auto VI trophies on
+      PlayStation 5 — every name, description and grade exactly as PlayStation publishes it,
+      every guide in our own words and cited.</p>
+    </div>
+  </div>
+  <div class="platinum-meter" aria-label="Platinum progress">
+    <div class="meter-big"><span id="earnedTotal">0</span><span class="meter-of"> / 55</span></div>
+    <div class="meter-label">trophies earned</div>
+    <div class="meter-track"><div class="meter-fill" id="meterFill"></div></div>
+    <div class="meter-pct" id="meterPct">0% of the way to platinum</div>
+    <div class="meter-time" id="meterTime"></div>
+  </div>
+</header>
+
+<nav class="view-tabs" aria-label="Sections">
+  <button type="button" class="tab is-active" data-view="tracker">Tracker</button>
+  <button type="button" class="tab" data-view="roadmap">Roadmap to Platinum</button>
+  <button type="button" class="tab" data-view="missable">Missable Watch</button>
+  <button type="button" class="tab" data-view="stats">Statistics</button>
+  <button type="button" class="tab" data-view="method">Sources &amp; Method</button>
+</nav>
+
+<div class="grade-strip" id="gradeStrip" aria-label="Progress by grade"></div>
+
+<main>
+<section class="panel is-active" id="panel-tracker">
+  <div class="toolbar">
+    <input id="searchBox" type="search" placeholder="Search a trophy, a mission, a word in a guide…" aria-label="Search trophies">
+    <select id="kindSelect" aria-label="Filter by kind">
+      <option value="all">All kinds</option>
+      <option value="story">Story</option>
+      <option value="strangers">Strangers &amp; strands</option>
+      <option value="collectibles">Collectibles</option>
+      <option value="activities">Activities</option>
+      <option value="crime">Crime</option>
+      <option value="money">Money</option>
+      <option value="exploration">Exploration</option>
+      <option value="misc">Misc / unconfirmed</option>
+      <option value="completion">100% completion</option>
+      <option value="platinum">Platinum</option>
+    </select>
+    <select id="gradeSelect" aria-label="Filter by grade">
+      <option value="all">All grades</option>
+      <option value="platinum">Platinum</option>
+      <option value="gold">Gold</option>
+      <option value="silver">Silver</option>
+      <option value="bronze">Bronze</option>
+    </select>
+    <label class="check"><input id="missableCheck" type="checkbox"> Missable watch only</label>
+    <label class="check"><input id="hideDoneCheck" type="checkbox"> Hide earned</label>
+    <label class="check check-spoiler"><input id="spoilerCheck" type="checkbox" checked> Hide story spoilers</label>
+    <span class="toolbar-gap"></span>
+    <span id="saveTools"></span>
+    <button id="resetBtn" type="button" class="btn btn-danger">Reset all</button>
+  </div>
+  <p class="list-count" id="listCount"></p>
+  <div class="tracker-layout">
+    <div class="trophy-rows" id="trophyRows" role="list"></div>
+    <aside class="guide-pane" id="guidePane" aria-live="polite"></aside>
+  </div>
+</section>
+
+<section class="panel" id="panel-roadmap">
+  <h2>Roadmap to the platinum</h2>
+  <p class="intro">Six stages in the order this guide recommends, built from the official descriptions
+  alone: story first, then the strands, collectibles and activities, the crime and money grinds,
+  and the 100% cleanup last. Stage hours are our own estimates, never official figures.</p>
+  <div id="roadmapStages"></div>
+</section>
+
+<section class="panel" id="panel-missable">
+  <h2>Missable Watch</h2>
+  <p class="intro">Flags are derived from the official description and labelled for what they are.
+  <strong>Watch</strong> — the description ties the trophy to a chapter, a mission window or a
+  companion who may be gone later; the risk is plausible, not confirmed in-game.
+  <strong>Unconfirmed</strong> — the description does not pin the trigger down, and this guide
+  invents nothing to fill the gap.</p>
+  <div id="missableRows"></div>
+</section>
+
+<section class="panel" id="panel-stats">
+  <h2>Statistics</h2>
+  <p class="intro">Your progress measured against the official list: by grade, by counted target,
+  by hidden trophy and by missable flag. Every number on this page is computed live from the
+  trophy data and your saved progress.</p>
+  <div class="stats-cards" id="statsCards"></div>
+  <h3>Counted trophies — where each target stands</h3>
+  <div id="countedRows"></div>
+</section>
+
+<section class="panel" id="panel-method">
+  <h2>Sources &amp; method</h2>
+  <p class="intro">Each guide is written for this entry, in our own words. Nothing is copied from
+  another guide; sources are named beside every trophy so a reader can see where each fact
+  comes from. Official names and descriptions are the one exception — they are shown exactly
+  as PlayStation publishes them.</p>
+  <div class="source-cards" id="sourceCards"></div>
+  <h3>How the list was checked</h3>
+  <ul class="method-points">
+    <li><strong>55 of 55</strong> names, descriptions and grades match the frozen official list
+    carried in the competition kit, whose Exophase and PSNProfiles listings agree on all three.</li>
+    <li><strong>28 hidden trophies</strong> were triangulated from three independent published
+    listings of the same official list; all three agree on exactly the same 28.</li>
+    <li><strong>20 counted trophies</strong> take their numeric target from the official
+    description itself — 250 stunts, 42 Shooting Range golds, 52 areas of Leonida, 500 tracked
+    choices, $250,000 laundered — as tracked by PlayStation and listed on PSNProfiles.</li>
+    <li><strong>No invented places.</strong> Where no source pins a location or a step down, the
+    guide says so and marks the trophy derived or unconfirmed instead of guessing.</li>
+  </ul>
+  <p class="fineprint">Leonida Ledger is an independent, unofficial fan guide. Grand Theft Auto
+  and GTA are trademarks of Take-Two Interactive. No Rockstar Games logo, artwork or game
+  screenshot appears anywhere in this app. It works fully offline, loads only its own files,
+  and keeps progress in your browser's localStorage.</p>
+</section>
+</main>
+
+<footer class="footbar">
+  <span>Leonida Ledger — offline GTA VI trophy guide &amp; tracker</span>
+  <span id="footNote"></span>
+</footer>
+<script type="module" src="app.js"></script>
+</body>
+</html>
