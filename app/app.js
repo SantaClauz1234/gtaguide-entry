@@ -221,9 +221,18 @@ function renderDetail() {
   ];
   for (const [k, v] of rows) { kv.append(node('dt', null, k), node('dd', null, v)); }
   pane.append(kv);
-  const noteSlot = node('div'); noteSlot.id = 'noteSlot';
-  pane.append(noteSlot);
-  if (window.__ledgerEnrich) window.__ledgerEnrich(t, noteSlot);
+  // A private note per trophy, kept with the rest of the save.
+  pane.append(node('h3', null, 'Your note'));
+  const noteBox = node('textarea', 'note-box');
+  noteBox.placeholder = 'Jot down where you left this one — a strand half-finished, a spot to revisit…';
+  noteBox.value = save.notes[t.id] || '';
+  noteBox.setAttribute('aria-label', `Your note for ${shownName(t)}`);
+  noteBox.addEventListener('input', () => {
+    if (noteBox.value) save.notes[t.id] = noteBox.value.slice(0, 2000);
+    else delete save.notes[t.id];
+    persist();
+  });
+  pane.append(noteBox);
 }
 
 // ---------------------------------------------------------------- roadmap
@@ -262,6 +271,52 @@ function renderMissable() {
   }
 }
 
+// ---------------------------------------------------------------- statistics
+function renderStats() {
+  const cards = byId('statsCards');
+  if (!cards) return;
+  cards.replaceChildren();
+  const total = trophies.length;
+  const earned = earnedSet.size;
+  const counted = trophies.filter((t) => t.target);
+  // Dollars are not added to stunt counts: the summed counter covers the 17
+  // counted trophies whose kind is not money; money targets stand separately.
+  const nonMoney = counted.filter((t) => t.kind !== 'money');
+  const countDone = nonMoney.reduce((s, t) => s + countOf(t), 0);
+  const countTotal = nonMoney.reduce((s, t) => s + t.target, 0);
+  const hidden = trophies.filter((t) => t.hidden);
+  const flagged = trophies.filter((t) => t.missableRisk !== 'none');
+  const stepTotal = Object.values(stepsById).reduce((s, v) => s + v.length, 0);
+  const cardsData = [
+    [`${earned} / ${total}`, `trophies earned — ${Math.round((100 * earned) / total)}% of the platinum`],
+    [GRADES.map((g) => `${trophies.filter((t) => t.grade === g && isEarned(t)).length}/${trophies.filter((t) => t.grade === g).length}`).join(' · '),
+      'earned by grade — the list holds 1 platinum, 2 gold, 6 silver, 46 bronze'],
+    [`${countDone.toLocaleString('en-US')} / ${countTotal.toLocaleString('en-US')}`,
+      'counted progress across the 17 non-money counted trophies (money targets are dollars and properties, summed nowhere)'],
+    [`${hidden.filter(isEarned).length} / ${hidden.length}`, 'hidden trophies earned — 28 of the 55 stay hidden on PlayStation until earned'],
+    [`${flagged.filter(isEarned).length} / ${flagged.length}`, 'missable flags cleared — 10 watch and 4 unconfirmed, best cleared before the finale'],
+    [`${stepTotal} cited steps`, 'every step cites Exophase, PSNProfiles, the official description, or this guide\u2019s own reading; 14 steps are flagged as estimates'],
+    [`≈ ${Math.round((ROADMAP_HOURS * (total - earned)) / total)} h`, 'estimated roadmap time left, across the six stages'],
+  ];
+  for (const [big, small] of cardsData) {
+    const card = node('article', 'stat-card');
+    card.append(node('b', null, big), node('span', null, small));
+    cards.append(card);
+  }
+  const rows = byId('countedRows');
+  rows.replaceChildren();
+  for (const t of counted) {
+    const line = node('div', 'counted-line');
+    line.append(node('span', null, shownName(t)));
+    const bar = node('div', 'bar');
+    const fill = node('i');
+    fill.style.width = `${(100 * countOf(t)) / t.target}%`;
+    bar.append(fill);
+    line.append(bar, node('span', null, `${countOf(t)} / ${t.target} ${t.unit}`));
+    rows.append(line);
+  }
+}
+
 // ---------------------------------------------------------------- method
 function renderMethod() {
   const wrap = byId('sourceCards');
@@ -276,7 +331,7 @@ function renderMethod() {
 // ---------------------------------------------------------------- wiring
 function renderAll() {
   renderHeader(); renderList(); renderDetail(); renderRoadmap(); renderMissable(); renderMethod();
-  if (window.__ledgerStats) window.__ledgerStats();
+  renderStats();
 }
 function switchView(name) {
   document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('is-active', b.dataset.view === name));
@@ -292,6 +347,55 @@ function bindControls() {
   const spoiler = byId('spoilerCheck');
   spoiler.checked = save.spoilersHidden;
   spoiler.addEventListener('change', () => { save.spoilersHidden = spoiler.checked; persist(); renderAll(); });
+  // Export / import: the whole save (earned, counts, notes) as one JSON file.
+  const tools = byId('saveTools');
+  const exportBtn = node('button', 'btn', 'Export progress');
+  exportBtn.type = 'button';
+  exportBtn.addEventListener('click', () => {
+    persist();
+    const payload = { app: 'leonida-ledger', version: 1, ...save, earned: [...earnedSet] };
+    const a = node('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+    a.download = 'leonida-ledger-progress.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  const importLabel = node('label', 'btn import-label', 'Import progress');
+  const fileInput = node('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'application/json';
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || !Array.isArray(data.earned)) throw new Error('not a progress file');
+      const validNames = new Set(trophies.map((t) => t.name));
+      earnedSet.clear();
+      for (const n of data.earned) if (validNames.has(n)) earnedSet.add(n);
+      save.counts = {};
+      for (const [id, v] of Object.entries(data.counts || {})) {
+        const t = trophies.find((x) => String(x.id) === String(id));
+        if (t && t.target) save.counts[t.id] = Math.max(0, Math.min(t.target, Math.floor(Number(v) || 0)));
+      }
+      save.notes = {};
+      for (const [id, v] of Object.entries(data.notes || {})) {
+        if (typeof v === 'string' && trophies.some((x) => String(x.id) === String(id))) {
+          save.notes[id] = v.slice(0, 2000);
+        }
+      }
+      if (typeof data.spoilersHidden === 'boolean') {
+        save.spoilersHidden = data.spoilersHidden;
+        byId('spoilerCheck').checked = data.spoilersHidden;
+      }
+      persist(); renderAll();
+    } catch {
+      alert('That file is not a Leonida Ledger progress export — nothing was imported.');
+    }
+    fileInput.value = '';
+  });
+  importLabel.append(fileInput);
+  tools.append(exportBtn, document.createTextNode(' '), importLabel, document.createTextNode(' '));
   byId('resetBtn').addEventListener('click', () => {
     earnedSet.clear(); save.counts = {}; save.notes = {};
     persist(); renderAll();
