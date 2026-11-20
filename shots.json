@@ -1,1 +1,38 @@
-[{"file":"1-tracker.jpg","note":"Tracker with guide detail open (The Shootist), progress seeded 13/55","path":"/","viewport":{"height":800,"width":1280}},{"file":"2-roadmap.jpg","note":"Roadmap to Platinum, six stages with progress","path":"/?view=roadmap","viewport":{"height":800,"width":1280}},{"file":"3-missable.jpg","note":"Missable Watch with spoiler mode on","path":"/?view=missable","viewport":{"height":800,"width":1280}},{"file":"4-counted.jpg","note":"Counted trophy detail with counter and sources, scrolled to A Long Road","path":"/","viewport":{"height":800,"width":1280}}]
+[
+ {
+  "file": "1-tracker.jpg",
+  "note": "Tracker with guide detail open (The Shootist), progress seeded 13/55",
+  "path": "/",
+  "viewport": {
+   "height": 800,
+   "width": 1280
+  }
+ },
+ {
+  "file": "2-roadmap.jpg",
+  "note": "Roadmap to Platinum, six stages with progress",
+  "path": "/?view=roadmap",
+  "viewport": {
+   "height": 800,
+   "width": 1280
+  }
+ },
+ {
+  "file": "3-missable.jpg",
+  "note": "Missable Watch with spoiler mode on",
+  "path": "/?view=missable",
+  "viewport": {
+   "height": 800,
+   "width": 1280
+  }
+ },
+ {
+  "file": "4-stats.jpg",
+  "note": "Statistics page: grade distribution, counted targets, hidden, missable",
+  "path": "/?view=stats",
+  "viewport": {
+   "height": 800,
+   "width": 1280
+  }
+ }
+]

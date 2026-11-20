@@ -36,20 +36,21 @@ const TOTAL_HOURS = STAGES.reduce((s, st) => s + st.hours, 0);
 
 const state = loadState();
 let doc = null;
+let stepsDoc = null;
 let selected = null;
 
 function loadState() {
   try {
     const raw = JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null');
     if (raw && Array.isArray(raw.earned)) {
-      return { earned: new Set(raw.earned), counters: raw.counters ?? {}, spoiler: raw.spoiler !== false };
+      return { earned: new Set(raw.earned), counters: raw.counters ?? {}, notes: raw.notes ?? {}, spoiler: raw.spoiler !== false };
     }
   } catch { /* corrupted save: start fresh */ }
-  return { earned: new Set(), counters: {}, spoiler: true };
+  return { earned: new Set(), counters: {}, notes: {}, spoiler: true };
 }
 function saveState() {
   localStorage.setItem(STORE_KEY, JSON.stringify({
-    earned: [...state.earned], counters: state.counters, spoiler: state.spoiler,
+    earned: [...state.earned], counters: state.counters, notes: state.notes, spoiler: state.spoiler,
   }));
 }
 function $(id) { return document.getElementById(id); }
@@ -68,6 +69,7 @@ function trophyProgress(t) { return t.target ? Math.min(state.counters[t.id] ?? 
 
 async function boot() {
   doc = await (await fetch('data/trophies.json')).json();
+  stepsDoc = await (await fetch('data/steps.json')).json();
   $('spoilerToggle').checked = state.spoiler;
   bindControls();
   renderAll();
@@ -116,6 +118,7 @@ function renderAll() {
   renderRoadmap();
   renderMissable();
   renderSources();
+  renderStatistics();
   $('footCount').textContent = `${state.earned.size} of ${doc.trophies.length} earned · ${doc.trophies.filter((t) => t.hidden).length} hidden · saved in your browser`;
 }
 function renderStats() {
@@ -218,6 +221,29 @@ function selectTrophy(t) {
     pane.append(prog);
   }
   pane.append(el('p', 'guide-text', t.guide));
+  const steps = stepsDoc?.steps?.[String(t.id)] ?? [];
+  if (steps.length) {
+    const totalMin = steps.reduce((s, x) => s + (x.estMin ?? 0), 0);
+    pane.append(el('h3', null, `Steps — ≈ ${totalMin} min estimated`));
+    const ol = el('ol', 'steps-list');
+    for (const [i, step] of steps.entries()) {
+      const li = el('li');
+      li.append(document.createTextNode(`${step.text} `));
+      const meta = el('span', 'step-meta', `(${step.estMin ?? 0} min · ${step.cites.map((k) => doc.sources[k] ?? k).join(' · ')})`);
+      li.append(meta);
+      if (step.estimate) li.append(el('span', 'badge unconfirmed', 'Estimate'));
+      ol.append(li);
+    }
+    pane.append(ol);
+  }
+  const noteLabel = el('label', 'note-label', 'Your note for this trophy');
+  const note = document.createElement('textarea');
+  note.className = 'note-input';
+  note.rows = 2;
+  note.placeholder = 'e.g. where you left off, a route that worked…';
+  note.value = state.notes[t.id] ?? '';
+  note.addEventListener('input', () => { state.notes[t.id] = note.value; saveState(); });
+  pane.append(noteLabel, note);
   const risk = el('div', 'risk-box' + (t.missableRisk === 'unknown' ? ' unknown' : ''));
   risk.textContent = t.missableRisk === 'watch'
     ? 'Missable watch — derived from the official description, not confirmed in-game: this trophy is tied to a chapter, mission window or partner. Clear it before the finale.'
@@ -231,9 +257,14 @@ function selectTrophy(t) {
   src.append(el('div', null, `Confidence: ${t.confidence} — ${t.confidence === 'official' ? 'name, description and grade are the official list' : t.confidence === 'derived' ? 'the guide is this entry’s own reading of the official description' : 'the trigger is not settled by any source this guide trusts'}.`));
   pane.append(src);
 }
+const STRATEGY = 'Platinum strategy in one paragraph: play the story straight through (Chapters 1–4, the named missions, the finale) and let the 12 story trophies land on their own — but before the finale, clear the partner one-offs Hot Together and Retail Therapy and try Catch Me If You Can at VCIA, because the official list promises no post-ending window for them. Then close the stranger strands (Andy, Kenton, Billy, Randy, Tyrone, Bret — 8 strands for the silver) while the map is still fresh, sweep the collectibles in one district-by-district pass (18 meditation spots, 3 card sets, 100 WAiNK, 100 vehicles, 10 Scooter Bros, 52 areas — one trip, four counters), grind the activities in the order they open (42 range golds and 250 stunts first, they feed the 100%), then the crime and money set (5 vaults, 9 gangs, $250,000 laundered, $100,000 spent, 8 garages), and let A Long Road and the platinum close last on the cleanup. The four unconfirmed trophies (Challenging Tank, Personal Best, Bad Luck I Guess, The Truth Is Out There) are chased by playing, never by guessing.';
 function renderRoadmap() {
   const box = $('roadmapList');
   box.replaceChildren();
+  const strat = el('div', 'strategy-box');
+  strat.append(el('b', null, 'How the six stages link: '));
+  strat.append(document.createTextNode(STRATEGY));
+  box.append(strat);
   for (const st of STAGES) {
     const trophies = doc.trophies.filter((t) => st.kinds.includes(t.kind));
     const got = trophies.filter((t) => state.earned.has(t.name)).length;
@@ -264,6 +295,49 @@ function renderMissable() {
     box.append(card);
   }
 }
+function renderStatistics() {
+  const box = $('statsGrid');
+  if (!box) return;
+  box.replaceChildren();
+  const total = doc.trophies.length;
+  const earned = state.earned.size;
+  // Money trophies are excluded from the summed counter: dollars and counts cannot be
+  // added honestly, so the sum covers the 18 non-money counted trophies only.
+  const counted = doc.trophies.filter((t) => t.target);
+  const countedSum = counted.filter((t) => t.kind !== 'money');
+  const countedDone = countedSum.reduce((s, t) => s + (trophyProgress(t) ?? 0), 0);
+  const countedTotal = countedSum.reduce((s, t) => s + t.target, 0);
+  const hidden = doc.trophies.filter((t) => t.hidden);
+  const hiddenGot = hidden.filter((t) => state.earned.has(t.name)).length;
+  const rows = [
+    ['Trophies earned', `${earned} / ${total}`, `${Math.round(100 * earned / total)}% of the platinum`],
+    ['By grade', GRADE_ORDER.map((g) => `${doc.trophies.filter((t) => t.grade === g && state.earned.has(t.name)).length}/${doc.trophies.filter((t) => t.grade === g).length} ${GRADE_LABEL[g]}`).join(' · '), '1 platinum, 2 gold, 6 silver, 46 bronze in the official list'],
+    ['Counted progress', `${countedDone.toLocaleString()} / ${countedTotal.toLocaleString()}`, 'Across the 18 non-money trophies with a PSN-tracked target (dollars counted separately)'],
+    ['Hidden trophies', `${hiddenGot} / ${hidden.length} earned`, '28 of the 55 are hidden on PlayStation until earned'],
+    ['Missable watch', `${doc.trophies.filter((t) => t.missableRisk !== 'none' && state.earned.has(t.name)).length} / ${doc.trophies.filter((t) => t.missableRisk !== 'none').length} cleared`, '10 watch + 4 unconfirmed — clear them before the finale'],
+    ['Guide depth', `${stepsDoc ? Object.values(stepsDoc.steps).flat().length : 0} cited steps`, 'Every step cites Exophase, PSNProfiles, the official description, or this guide’s own reading — 14 steps flagged as estimates'],
+    ['Estimated time left', `≈ ${Math.round(TOTAL_HOURS * (total - earned) / total)} h`, 'Roadmap estimate across the six stages'],
+  ];
+  for (const [label, value, note] of rows) {
+    const card = el('div', 'stat-card');
+    card.append(el('div', 'stat-label', label));
+    card.append(el('div', 'stat-value', value));
+    card.append(el('div', 'stat-note', note));
+    box.append(card);
+  }
+  const countedBox = $('countedTable');
+  countedBox.replaceChildren();
+  for (const t of counted) {
+    const row = el('div', 'counted-row');
+    row.append(el('span', null, t.name));
+    row.append(el('span', 'counted-num', `${trophyProgress(t)} / ${t.target} ${t.unit}`));
+    const bar = el('div', 'grade-bar'); const fill = el('i');
+    fill.style.width = (100 * (trophyProgress(t) ?? 0) / t.target) + '%';
+    fill.style.background = 'var(--accent)';
+    bar.append(fill); row.append(bar);
+    countedBox.append(row);
+  }
+}
 function renderSources() {
   const box = $('sourcesGrid');
   box.replaceChildren();
@@ -275,7 +349,7 @@ function renderSources() {
   }
 }
 function exportProgress() {
-  const data = { app: 'leonida-ledger', exportedAt: new Date().toISOString(), earned: [...state.earned], counters: state.counters };
+  const data = { app: 'leonida-ledger', exportedAt: new Date().toISOString(), earned: [...state.earned], counters: state.counters, notes: state.notes };
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
   a.download = 'leonida-ledger-progress.json';
@@ -295,6 +369,10 @@ async function importProgress(e) {
     for (const [id, v] of Object.entries(data.counters ?? {})) {
       const t = doc.trophies.find((x) => String(x.id) === String(id));
       if (t && t.target) state.counters[t.id] = Math.max(0, Math.min(t.target, Number(v) || 0));
+    }
+    state.notes = {};
+    for (const [id, v] of Object.entries(data.notes ?? {})) {
+      if (typeof v === 'string' && doc.trophies.some((x) => String(x.id) === String(id))) state.notes[id] = v.slice(0, 2000);
     }
     saveState(); renderAll();
     alert(`Imported ${earned.length} earned trophies.`);

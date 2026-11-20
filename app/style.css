@@ -111,6 +111,21 @@ button.danger { color: var(--danger); }
 .method-list { max-width: 860px; }
 .method-list li { margin-bottom: 8px; }
 .fineprint { color: var(--muted); font-size: 13px; max-width: 860px; }
+.steps-list { margin: 8px 0 4px; padding-left: 20px; }
+.steps-list li { margin-bottom: 8px; font-size: 14px; }
+.step-meta { color: var(--muted); font-size: 12px; }
+.note-label { display: block; font-size: 13px; font-weight: 700; margin-top: 12px; }
+.note-input { width: 100%; margin-top: 4px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 14px; background: #fff; }
+.strategy-box { background: var(--accent-soft); border: 1px solid #f0c9b8; border-radius: 12px; padding: 14px 18px; margin-bottom: 12px; font-size: 14px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 8px; }
+.stat-card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.stat-label { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 700; }
+.stat-value { font-size: 19px; font-weight: 700; margin: 4px 0 2px; }
+.stat-note { font-size: 13px; color: var(--muted); }
+.counted-table { display: flex; flex-direction: column; gap: 6px; max-width: 860px; }
+.counted-row { display: grid; grid-template-columns: 1fr 170px; gap: 8px 12px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
+.counted-row .grade-bar { grid-column: 1 / -1; margin-top: 0; }
+.counted-num { font-weight: 700; text-align: right; }
 .foot { display: flex; justify-content: space-between; padding: 14px 28px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 @media (max-width: 900px) {
   .tracker-grid { grid-template-columns: 1fr; }
