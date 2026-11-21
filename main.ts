@@ -14,6 +14,7 @@ import { buildDossier } from './vendor/makefun-frontend.ts';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const EXPECTED_TROPHY_TOTAL = 55;
 
 // Refuse to hand in an incomplete guide. The trophy data must carry all 55
 // official trophies, each with a name and a non-blank guide, and the step
@@ -21,8 +22,8 @@ const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 // is cheaper to fail here, loudly, before a single file is copied.
 const trophyFile = JSON.parse(readFileSync(join(root, 'app', 'data', 'trophies.json'), 'utf-8'));
 const trophyList = Array.isArray(trophyFile) ? trophyFile : trophyFile.trophies;
-if (!Array.isArray(trophyList) || trophyList.length !== 55) {
-  throw new Error(`Leonida Ledger: expected 55 trophies, found ${trophyList?.length ?? 0}`);
+if (!Array.isArray(trophyList) || trophyList.length !== EXPECTED_TROPHY_TOTAL) {
+  throw new Error(`Leonida Ledger: expected ${EXPECTED_TROPHY_TOTAL} trophies, found ${trophyList?.length ?? 0}`);
 }
 for (const t of trophyList) {
   if (!t.name || typeof t.guide !== 'string' || !t.guide.trim()) {

@@ -67,3 +67,4 @@
   {"id": 55, "name": "On the Spot", "description": "Register 10 vehicles to the Scooter Bros app.", "grade": "bronze", "hidden": false, "kind": "collectibles", "stage": 3, "target": 10, "unit": "vehicles registered", "missableRisk": "none", "confidence": "official", "sources": ["EXO", "PSNP", "PSN", "OWN"], "guide": "Register 10 vehicles to the Scooter Bros app. Pair it with Whip It Good: every new vehicle you discover is a registration candidate, so register as you discover and both counters climb together. Sources: the official description (PSN); target as tracked by PSNProfiles."}
  ]
 }
+

@@ -1,3 +1,4 @@
+// Leonida Ledger local preview server (recorded-v3 touch-up, 21 Nov 2026).
 // A small static file server for trying the guide locally:
 //   node serve.ts [--port 8123]
 // It serves only the files under app/ (the guide's root) on localhost and
@@ -39,6 +40,6 @@ createServer((req, res) => {
   } catch {
     res.writeHead(404); res.end('not found'); return;
   }
-  res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
+  res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-store' });
   createReadStream(file).pipe(res);
 }).listen(port, () => console.log(`Leonida Ledger serving at http://localhost:${port}`));

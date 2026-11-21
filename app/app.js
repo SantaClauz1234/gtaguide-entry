@@ -130,6 +130,7 @@ function renderNext() {
   box.append(node('span', null, ` — ${why.join(' · ')}`));
   const openBtn = node('button', 'btn next-open', 'Open its guide');
   openBtn.type = 'button';
+  openBtn.setAttribute('aria-label', `Open the guide for ${shownName(t)}`);
   openBtn.addEventListener('click', () => {
     selectedId = t.id; renderList(); renderDetail();
     byId('guidePane').scrollIntoView({ behavior: 'smooth', block: 'nearest' });

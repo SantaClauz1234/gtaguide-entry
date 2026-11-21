@@ -57,3 +57,9 @@ unrecorded branch because it is fact, not code.
 - Stage C: enrichment — Statistics page computed live from the data, a
   private note per trophy, validated export/import, four browser-rendered
   screenshots, and a fresh `main.ts`/`serve.ts` handover pair.
+
+## Verification note — 21 November 2026
+
+- Re-checked on 21 November 2026 in the recorded-v3 touch-up pass: the trophy
+  and step data files still parse cleanly and still cover 55 trophies, and no
+  trophy value was changed in that pass — only file-ending whitespace.
