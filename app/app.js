@@ -84,6 +84,59 @@ function citeNames(keys) {
   return (keys || []).map((k) => (sourceBook[k] || k).split(' — ')[0].split(':')[0]).join(', ');
 }
 
+// ---------------------------------------------------------------- next trophy
+// The easiest unearned trophy, ranked from the reader's current progress:
+// bronze before silver and gold, early roadmap stages before late ones,
+// short estimated steps before long grinds, a counted trophy nearly done
+// before one barely started, and a missable-watch trophy pulled forward
+// so it is done before its window can close. The platinum never suggests
+// itself: it lands on its own when the other 54 are earned.
+const GRADE_WEIGHT = { bronze: 0, silver: 30, gold: 60, platinum: 1000 };
+function stepMinutes(t) {
+  return (stepsById[t.id] || []).reduce((s, st) => s + (Number(st.estMin) || 0), 0);
+}
+function nextTrophyScore(t) {
+  let score = (GRADE_WEIGHT[t.grade] ?? 0) + (t.stage ?? 6) * 20 + Math.min(stepMinutes(t), 120);
+  if (t.target) score += (1 - countOf(t) / t.target) * 15;
+  if (t.missableRisk === 'watch') score -= 8;
+  return score;
+}
+function suggestNextTrophy() {
+  const open = trophies.filter((t) => !isEarned(t));
+  if (!open.length) return null;
+  // A suggestion the reader cannot identify is no suggestion: while
+  // spoilers are hidden, a hidden story trophy is masked to a placeholder,
+  // so suggest from the trophies whose names are actually visible. Only
+  // when every unearned trophy is masked does the pool fall back to them.
+  const visible = open.filter((t) => !masked(t));
+  const pool = visible.length ? visible : open;
+  return pool.reduce((best, t) => (nextTrophyScore(t) < nextTrophyScore(best) ? t : best));
+}
+function renderNext() {
+  const box = byId('nextTrophy');
+  if (!box) return;
+  box.replaceChildren();
+  const t = suggestNextTrophy();
+  if (!t) {
+    box.append(node('b', null, 'Platinum earned — Vice Got a Price! is yours.'),
+      node('span', null, ' All 55 trophies are ticked off.'));
+    return;
+  }
+  const why = [`${t.grade}`, `stage ${t.stage}`, `≈ ${stepMinutes(t)} min of steps (our estimate)`];
+  if (t.target) why.push(`${countOf(t)} / ${t.target} ${t.unit} already counted`);
+  if (t.missableRisk === 'watch') why.push('missable — do it before its window closes');
+  box.append(node('span', 'next-label', 'Your next trophy: '));
+  box.append(node('b', null, shownName(t)));
+  box.append(node('span', null, ` — ${why.join(' · ')}`));
+  const openBtn = node('button', 'btn next-open', 'Open its guide');
+  openBtn.type = 'button';
+  openBtn.addEventListener('click', () => {
+    selectedId = t.id; renderList(); renderDetail();
+    byId('guidePane').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  box.append(openBtn);
+}
+
 // ---------------------------------------------------------------- header
 function renderHeader() {
   const earned = earnedSet.size;
@@ -330,7 +383,7 @@ function renderMethod() {
 
 // ---------------------------------------------------------------- wiring
 function renderAll() {
-  renderHeader(); renderList(); renderDetail(); renderRoadmap(); renderMissable(); renderMethod();
+  renderHeader(); renderNext(); renderList(); renderDetail(); renderRoadmap(); renderMissable(); renderMethod();
   renderStats();
 }
 function switchView(name) {

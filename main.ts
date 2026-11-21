@@ -57,4 +57,24 @@ writeFileSync(
 );
 const stepCount = Object.values(stepFile.steps as Record<string, unknown[]>)
   .reduce((sum, arr) => sum + arr.length, 0);
+
+// The same "next trophy" ranking the app uses, from a blank save: bronze
+// before silver and gold, early roadmap stages first, short estimated
+// steps before long grinds, a counted trophy's full target still ahead,
+// and a missable-watch trophy pulled forward. The platinum (weight 1000)
+// never wins. Hidden story trophies are skipped, exactly as the app does
+// while spoilers are hidden — a suggestion the reader cannot identify by
+// name is no suggestion. This is the suggested first trophy for a fresh player.
+const GRADE_WEIGHT: Record<string, number> = { bronze: 0, silver: 30, gold: 60, platinum: 1000 };
+let firstPick = trophyList[0];
+let firstScore = Infinity;
+for (const t of trophyList) {
+  if (t.hidden && t.kind === 'story') continue;
+  const tSteps = (stepFile.steps as Record<string, { estMin?: number }[]>)[t.id] ?? [];
+  const est = tSteps.reduce((s, st) => s + (Number(st.estMin) || 0), 0);
+  const score = (GRADE_WEIGHT[t.grade] ?? 0) + (t.stage ?? 6) * 20 + Math.min(est, 120)
+    + (t.target ? 15 : 0) - (t.missableRisk === 'watch' ? 8 : 0);
+  if (score < firstScore) { firstScore = score; firstPick = t; }
+}
 console.log(`Leonida Ledger: handed in 55 trophies and ${stepCount} cited steps; dossier written to ${outDir}`);
+console.log(`Leonida Ledger: suggested first trophy: ${firstPick.name} (${firstPick.grade}, stage ${firstPick.stage})`);
